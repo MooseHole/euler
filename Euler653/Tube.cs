@@ -115,7 +115,7 @@ namespace Euler653
                     continue;
                 }
 
-                if (marble.Position >= _length)
+                if (marble.Position > _length)
                 {
                     marble.FellOut = true;
                     continue;
@@ -139,7 +139,7 @@ namespace Euler653
                 return;
             }
 
-            if (_marbles[marbleNumber - 1].EastEdge >= _marbles[marbleNumber].WestEdge)
+            if (_marbles[marbleNumber - 1].SamePosition(_marbles[marbleNumber]))
             {
                 _marbles[marbleNumber - 1].Collide();
                 _marbles[marbleNumber].Collide();
@@ -159,7 +159,7 @@ namespace Euler653
                 return;
             }
 
-            if (_marbles[marbleNumber].EastEdge >= _marbles[marbleNumber + 1].WestEdge)
+            if (_marbles[marbleNumber].SamePosition(_marbles[marbleNumber + 1]))
             {
                 _marbles[marbleNumber].Collide();
                 _marbles[marbleNumber + 1].Collide();
@@ -175,7 +175,7 @@ namespace Euler653
                 Step();
             }
 
-            return _marbles[marbleNumber].TravelDistance;
+            return (int)_marbles[marbleNumber].TravelDistance;
         }
     }
 }

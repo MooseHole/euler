@@ -74,5 +74,12 @@ namespace Euler653
             Tube tube = new Tube(100000, 101);
             Assert.AreEqual(114101, tube.GetTotalDistanceOf(51));
         }
+
+        [TestMethod]
+        public void OutputSolutionTest()
+        {
+            Tube tube = new Tube(1000000000, 1000001);
+            Assert.AreEqual(114101, tube.GetTotalDistanceOf(500001));
+        }
     }
 }

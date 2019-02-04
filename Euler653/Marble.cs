@@ -9,9 +9,10 @@ namespace Euler653
     class Marble
     {
         private UInt64 _position;
-        private int _travelDistance;
+        private double _travelDistance;
         private bool _movingWest;
         private bool _fellOut;
+        private bool _andAHalf;
 
         public UInt64 Position
         {
@@ -32,7 +33,7 @@ namespace Euler653
         {
             get => _movingWest;
         }
-        public int TravelDistance
+        public double TravelDistance
         {
             get => _travelDistance;
         }
@@ -57,10 +58,39 @@ namespace Euler653
             return _movingWest;
         }
 
+        public bool SamePosition(Marble eastMarble)
+        {
+            return EastEdge == eastMarble.WestEdge && _andAHalf == eastMarble._andAHalf;
+        }
+
         public void Step(int amount)
         {
-            _travelDistance += amount;
-            _position += (UInt64)(_movingWest ? (-1 * amount) : amount);
+            if (MovingWest)
+            {
+                if (_andAHalf)
+                {
+                    _andAHalf = false;
+                }
+                else
+                {
+                    _position -= 1;
+                    _andAHalf = true;
+                }
+            }
+            else
+            {
+                if (_andAHalf)
+                {
+                    _position += 1;
+                    _andAHalf = false;
+                }
+                else
+                {
+                    _andAHalf = true;
+                }
+            }
+
+            _travelDistance += 0.5;
         }
     }
 }
