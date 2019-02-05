@@ -12,11 +12,25 @@ namespace Euler653
         private double _travelDistance;
         private bool _movingWest;
         private bool _fellOut;
+        private Marble _previousMarble;
+        private Marble _nextMarble;
 
         public UInt64 Position
         {
             get => _position;
             private set => _position = value;
+        }
+
+        public Marble PreviousMarble
+        {
+            get => _previousMarble;
+            set => _previousMarble = value;
+        }
+
+        public Marble NextMarble
+        {
+            get => _nextMarble;
+            set => _nextMarble = value;
         }
 
         public UInt64 PositionMillimeters
@@ -37,6 +51,7 @@ namespace Euler653
         public bool MovingWest
         {
             get => _movingWest;
+            private set => _movingWest = value;
         }
 
         public double TravelDistance
@@ -53,7 +68,53 @@ namespace Euler653
         public bool FellOut
         {
             get => _fellOut;
-            set => _fellOut = value;
+            set
+            {
+                if (_fellOut != value)
+                {
+                    _fellOut = value;
+                    if (value)
+                    {
+                        Console.Write(".");
+                    }
+                }
+            }
+        }
+
+        public bool IsLastMarble
+        {
+            get => !FellOut && (_nextMarble == null || _nextMarble.FellOut);
+        }
+
+        public bool IsWestmostMarble
+        {
+            get => _previousMarble == null;
+        }
+
+        public bool TouchingPrevious
+        {
+            get
+            {
+                if (IsWestmostMarble)
+                {
+                    return MovingWest && WestEdge == 0;
+                }
+
+                return SamePosition(PreviousMarble);
+            }
+        }
+
+        public bool TouchingNext
+        {
+            get
+            {
+                if (FellOut || IsLastMarble)
+                {
+                    return false;
+                }
+
+                return SamePosition(NextMarble);
+            }
         }
 
         public Marble(UInt64 position, bool movingWest)
@@ -62,17 +123,34 @@ namespace Euler653
             _movingWest = movingWest;
             _travelDistance = 0;
             _fellOut = false;
+            _previousMarble = null;
+            _nextMarble = null;
         }
 
-        public bool Collide()
+        public void Collide()
         {
-            _movingWest = !_movingWest;
-            return _movingWest;
+            if (TouchingPrevious)
+            {
+                _movingWest = !_movingWest;
+                if (!IsWestmostMarble)
+                {
+                    PreviousMarble.MovingWest = !PreviousMarble.MovingWest;
+                }
+            }
+
+            if (TouchingNext)
+            {
+                _movingWest = !_movingWest;
+                NextMarble.MovingWest = !NextMarble.MovingWest;
+            }
         }
 
         public bool SamePosition(Marble eastMarble)
         {
-            return EastEdge == eastMarble.WestEdge;
+            if (eastMarble == null)
+                return false;
+
+            return !MovingWest && eastMarble.MovingWest && EastEdge == eastMarble.WestEdge;
         }
 
         public UInt64 DistanceToCollision(Marble eastMarble)

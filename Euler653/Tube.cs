@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Euler653
@@ -31,8 +32,14 @@ namespace Euler653
             {
                 UInt64 thisPositionMillimeters = previousEdgeMillimeters + rng.GetInitialGap(i) + Constants.MarbleRadiusMillimeters;
                 bool thisMovingWest = rng.R(i) > 10_000_000;
-                _marbles.Add(new Marble(thisPositionMillimeters * 10, thisMovingWest));
+                Marble thisMarble = new Marble(thisPositionMillimeters * 10, thisMovingWest);
+                _marbles.Add(thisMarble);
                 previousEdgeMillimeters = thisPositionMillimeters + Constants.MarbleRadiusMillimeters;
+                if (i > 0)
+                {
+                    thisMarble.PreviousMarble = _marbles[i - 1];
+                    thisMarble.PreviousMarble.NextMarble = thisMarble;
+                }
             }
         }
 
@@ -40,104 +47,67 @@ namespace Euler653
         {
             UInt64 minDistance = _marbles[0].MovingWest ? _marbles[0].WestEdge : UInt64.MaxValue;
 
-            for (int i = 0; i < _marbles.Count; i++)
+            foreach(Marble thisMarble in _marbles)
             {
-                Marble marble = _marbles[i];
-                if (marble.FellOut)
-                {
-                    continue;
-                }
-
-                bool isLastMarble = i == _marbles.Count - 1;
-
-                Marble nextMarble = isLastMarble ? marble : _marbles[i + 1];
-
-                UInt64 distance = marble.DistanceToCollision(nextMarble);
-
-                if (isLastMarble || nextMarble.FellOut)
-                {
-                    distance = _length + 1 - marble.Position;
-                }
-
-                minDistance = (UInt64) Math.Abs((int) Math.Min(minDistance, distance));
                 if (minDistance == 0)
                 {
                     break;
                 }
-            }
 
-            for (int i = 0; i < _marbles.Count; i++)
-            {
-                Marble marble = _marbles[i];
-                if (marble.FellOut)
+                if (thisMarble.FellOut)
                 {
                     continue;
                 }
 
-                if (marble.Position > _length)
-                {
-                    marble.FellOut = true;
-                    continue;
-                }
+                UInt64 distance = UInt64.MaxValue;
 
-                if (minDistance == 0)
+                if (thisMarble.IsLastMarble)
                 {
-                    CollideWithPrevious(i);
-                    CollideWithNext(i);
+                    distance = _length + 1 - thisMarble.Position;
                 }
                 else
                 {
-                    marble.Step(minDistance);
+                    distance = thisMarble.DistanceToCollision(thisMarble.NextMarble);
                 }
+
+                minDistance = (UInt64) Math.Abs((int) Math.Min(minDistance, distance));
             }
+
+            Parallel.ForEach(_marbles, thisMarble => ProcessMarble(thisMarble, minDistance));
         }
 
-        void CollideWithPrevious(int marbleNumber)
+        void ProcessMarble(Marble thisMarble, UInt64 stepDistance)
         {
-            if (marbleNumber == 0)
+            if (thisMarble.FellOut)
             {
-                if (_marbles[marbleNumber].WestEdge <= 0)
-                {
-                    _marbles[marbleNumber].Collide();
-                }
                 return;
             }
 
-            if (_marbles[marbleNumber - 1].SamePosition(_marbles[marbleNumber]))
+            if (thisMarble.Position > _length)
             {
-                _marbles[marbleNumber].Collide();
+                thisMarble.FellOut = true;
+                return;
+            }
+
+            if (stepDistance == 0)
+            {
+                thisMarble.Collide();
+            }
+            else
+            {
+                thisMarble.Step(stepDistance);
             }
         }
-
-
-        void CollideWithNext(int marbleNumber)
-        {
-            if (marbleNumber == _marbles.Count - 1)
-            {
-                return;
-            }
-
-            if (_marbles[marbleNumber + 1].FellOut)
-            {
-                return;
-            }
-
-            if (_marbles[marbleNumber].SamePosition(_marbles[marbleNumber + 1]))
-            {
-                _marbles[marbleNumber].Collide();
-            }
-        }
-
 
         public int GetTotalDistanceOfMillimeters(int marbleNumberOneBased)
         {
-            int marbleNumber = marbleNumberOneBased - 1;
-            while (!_marbles[marbleNumber].FellOut)
+            Marble thisMarble = _marbles[marbleNumberOneBased - 1];
+            while (!thisMarble.FellOut)
             {
                 Step();
             }
 
-            return (int)_marbles[marbleNumber].TravelDistanceMillimeters;
+            return (int)thisMarble.TravelDistanceMillimeters;
         }
     }
 }

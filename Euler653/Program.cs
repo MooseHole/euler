@@ -10,11 +10,7 @@ namespace Euler653
     {
         static void Main(string[] args)
         {
-            bool argsOk = true;
-            if (args.Length != 3)
-            {
-                argsOk = false;
-            }
+            bool argsOk = args.Length == 3;
 
             UInt64 L = 0;
             int N = 0;
