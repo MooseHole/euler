@@ -12,11 +12,16 @@ namespace Euler653
         private double _travelDistance;
         private bool _movingWest;
         private bool _fellOut;
-        private bool _andAHalf;
 
         public UInt64 Position
         {
             get => _position;
+            private set => _position = value;
+        }
+
+        public UInt64 PositionMillimeters
+        {
+            get => _position / 10;
         }
 
         public UInt64 WestEdge
@@ -33,9 +38,16 @@ namespace Euler653
         {
             get => _movingWest;
         }
+
         public double TravelDistance
         {
             get => _travelDistance;
+            private set => _travelDistance = value;
+        }
+
+        public double TravelDistanceMillimeters
+        {
+            get => _travelDistance / 10;
         }
 
         public bool FellOut
@@ -60,37 +72,28 @@ namespace Euler653
 
         public bool SamePosition(Marble eastMarble)
         {
-            return EastEdge == eastMarble.WestEdge && _andAHalf == eastMarble._andAHalf;
+            return EastEdge == eastMarble.WestEdge;
         }
 
-        public void Step(int amount)
+        public UInt64 DistanceToCollision(Marble eastMarble)
         {
-            if (MovingWest)
+            if (FellOut)
             {
-                if (_andAHalf)
-                {
-                    _andAHalf = false;
-                }
-                else
-                {
-                    _position -= 1;
-                    _andAHalf = true;
-                }
-            }
-            else
-            {
-                if (_andAHalf)
-                {
-                    _position += 1;
-                    _andAHalf = false;
-                }
-                else
-                {
-                    _andAHalf = true;
-                }
+                return UInt64.MaxValue;
             }
 
-            _travelDistance += 0.5;
+            if (MovingWest || !eastMarble.MovingWest)
+            {
+                return UInt64.MaxValue;
+            }
+
+            return (eastMarble.WestEdge - EastEdge) / 2;
+        }
+
+        public void Step(UInt64 distance)
+        {
+            _position += distance * (UInt64)(MovingWest ? -1 : 1);
+            _travelDistance += distance;
         }
     }
 }

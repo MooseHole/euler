@@ -40,7 +40,7 @@ namespace Euler653
             }
 
             Tube tube = new Tube(L, N);
-            Console.WriteLine(tube.GetTotalDistanceOf(j));
+            Console.WriteLine(tube.GetTotalDistanceOfMillimeters(j));
         }
     }
 }
