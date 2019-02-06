@@ -81,6 +81,11 @@ namespace Euler653
             }
 
             Parallel.ForEach(_marbles, thisMarble => ProcessMarble(thisMarble, minDistance));
+            if (minDistance > 0)
+            {
+                // A collision is likely after the previous processing, so process collisions now.
+                Parallel.ForEach(_marbles, thisMarble => ProcessMarble(thisMarble, 0));
+            }
         }
 
         void ProcessMarble(Marble thisMarble, UInt64 stepDistance)
