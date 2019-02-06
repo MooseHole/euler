@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Euler653
@@ -25,12 +22,19 @@ namespace Euler653
 
         void SetupMarbles(int numMarbles)
         {
+            Console.Write("v");
             RNG rng = new RNG();
             UInt64 previousEdgeMillimeters = 0;
             _marbles = new List<Marble>();
             for (int i = 0; i < numMarbles; i++)
             {
-                UInt64 thisPositionMillimeters = previousEdgeMillimeters + rng.GetInitialGap(i) + Constants.MarbleRadiusMillimeters;
+                UInt64 thisPositionMillimeters =
+                    previousEdgeMillimeters + rng.GetInitialGap(i) + Constants.MarbleRadiusMillimeters;
+                if (thisPositionMillimeters * 10 > _length)
+                {
+                    break;
+                }
+
                 bool thisMovingWest = rng.R(i) > 10_000_000;
                 Marble thisMarble = new Marble(thisPositionMillimeters * 10, thisMovingWest);
                 _marbles.Add(thisMarble);
@@ -41,6 +45,8 @@ namespace Euler653
                     thisMarble.PreviousMarble.NextMarble = thisMarble;
                 }
             }
+
+            Console.WriteLine("^ Total Marbles:" + _marbles.Count);
         }
 
         void Step()
@@ -70,7 +76,7 @@ namespace Euler653
                     distance = thisMarble.DistanceToCollision(thisMarble.NextMarble);
                 }
 
-                minDistance = (UInt64) Math.Abs((int) Math.Min(minDistance, distance));
+                minDistance = Math.Min(minDistance, distance);
             }
 
             Parallel.ForEach(_marbles, thisMarble => ProcessMarble(thisMarble, minDistance));
@@ -104,10 +110,27 @@ namespace Euler653
             Marble thisMarble = _marbles[marbleNumberOneBased - 1];
             while (!thisMarble.FellOut)
             {
+                CleanupFallenMarbles();
                 Step();
             }
 
             return (int)thisMarble.TravelDistanceMillimeters;
+        }
+
+        private void CleanupFallenMarbles()
+        {
+            for (int i = _marbles.Count - 1; i >= 0; i--)
+            {
+                if (_marbles[i].FellOut)
+                {
+                    _marbles.RemoveAt(i);
+                }
+                else
+                {
+                    // They only fall out on the end
+                    return;
+                }
+            }
         }
     }
 }
