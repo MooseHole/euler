@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Threading.Tasks;
 
 namespace Euler653
@@ -110,14 +111,14 @@ namespace Euler653
             Marble thisMarble = _marbles[marbleNumberOneBased - 1];
             while (!thisMarble.FellOut)
             {
-                CleanupFallenMarbles();
+                CleanupFallenMarbles(marbleNumberOneBased);
                 Step();
             }
 
             return (int)thisMarble.TravelDistanceMillimeters;
         }
 
-        private void CleanupFallenMarbles()
+        private void CleanupFallenMarbles(int dontCareIndex)
         {
             for (int i = _marbles.Count - 1; i >= 0; i--)
             {
@@ -128,7 +129,20 @@ namespace Euler653
                 else
                 {
                     // They only fall out on the end
-                    return;
+                    break;
+                }
+            }
+
+            for (int i = _marbles.Count - 1; i >= 0; i--)
+            {
+                if (i > dontCareIndex && !_marbles[i].MovingWest)
+                {
+                    _marbles[i].FellOut = true;
+                }
+                else
+                {
+                    // They only fall out on the end
+                    break;
                 }
             }
         }
