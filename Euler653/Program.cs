@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace Euler653
 {
@@ -6,33 +7,45 @@ namespace Euler653
     {
         static void Main(string[] args)
         {
-            bool argsOk = args.Length == 3;
+            bool argsNumericOk = args.Length == 3;
+            bool argsFileOk = args.Length == 1;
 
             UInt64 L = 0;
             int N = 0;
             int j = 0;
 
-            if (argsOk && !UInt64.TryParse(args[0], out L))
+
+            if (argsNumericOk && !UInt64.TryParse(args[0], out L))
             {
-                argsOk = false;
+                argsNumericOk = false;
             }
-            if (argsOk && !int.TryParse(args[1], out N))
+            if (argsNumericOk && !int.TryParse(args[1], out N))
             {
-                argsOk = false;
+                argsNumericOk = false;
             }
-            if (argsOk && !int.TryParse(args[2], out  j))
+            if (argsNumericOk && !int.TryParse(args[2], out j))
             {
-                argsOk = false;
+                argsNumericOk = false;
             }
 
-            if (!argsOk)
+            Tube tube = null;
+            if (argsNumericOk)
+            {
+                tube = new Tube(L, N, j);
+            }
+            else if (argsFileOk)
+            {
+                tube = new Tube(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, args[0]));
+            }
+
+            if (!argsNumericOk && !argsFileOk)
             {
                 Console.WriteLine("Usage: " + System.AppDomain.CurrentDomain.FriendlyName + " L N j.  See https://projecteuler.net/problem=653");
+                Console.WriteLine("Usage: " + System.AppDomain.CurrentDomain.FriendlyName + " filename.txt");
                 return;
             }
 
-            Tube tube = new Tube(L, N);
-            Console.WriteLine(tube.GetTotalDistanceOfMillimeters(j));
+            Console.WriteLine(tube?.GetTotalDistanceOfMillimeters());
         }
     }
 }

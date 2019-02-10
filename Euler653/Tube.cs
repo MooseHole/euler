@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Euler653
@@ -9,16 +11,121 @@ namespace Euler653
     {
         private UInt64 _length;
         private List<Marble> _marbles;
+        private int _checkMarble;
+        private int _currentFellout = 0;
 
-        public Tube(UInt64 lengthMillimeters, int numMarbles)
+        public Tube(UInt64 lengthMillimeters, int numMarbles, int checkNum)
         {
             _length = lengthMillimeters * Constants.DistanceMultiplier;
+            _checkMarble = checkNum - 1;
             SetupMarbles(numMarbles);
+        }
+
+        public Tube(string filename)
+        {
+            Filename = filename;
+            if (File.Exists(Filename))
+            {
+                _marbles = new List<Marble>();
+                StreamReader reader = File.OpenText(Filename);
+                string line;
+                int marbleIndex = 0;
+                bool checkNum = false;
+                bool setCheckMarble = false;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    string delimiters = "" + Constants.WestDelimiter + Constants.EastDelimiter +
+                                        Constants.CheckDelimiter + Constants.CheckDistanceDelimiter;
+                    string[] parts = Regex.Split(line, @"([" + delimiters + @"])");
+                    double p;
+                    bool firstNumber = true;
+                    Marble thisMarble = null;
+                    foreach (string part in parts)
+                    {
+                        if (double.TryParse(part, out p))
+                        {
+                            if (firstNumber)
+                            {
+                                _length = (UInt64)(p * Constants.DistanceMultiplier);
+                                firstNumber = false;
+                            }
+                            else if (checkNum)
+                            {
+                                _checkMarble = (int)p - 1;
+                                checkNum = false;
+                            }
+                            else if (setCheckMarble)
+                            {
+                                _marbles[_checkMarble].TravelDistanceMillimeters = p;
+                                setCheckMarble = false;
+                            }
+                            else
+                            {
+                                thisMarble.Position = (UInt64)(p * Constants.DistanceMultiplier);
+                                _marbles.Add(thisMarble);
+                                if (marbleIndex > 0)
+                                {
+                                    thisMarble.PreviousMarble = _marbles[marbleIndex - 1];
+                                    thisMarble.PreviousMarble.NextMarble = thisMarble;
+                                }
+                                marbleIndex++;
+                            }
+                        }
+                        else
+                        {
+                            switch (part[0])
+                            {
+                                case Constants.CheckDelimiter:
+                                    checkNum = true;
+                                    break;
+                                case Constants.CheckDistanceDelimiter:
+                                    setCheckMarble = true;
+                                    break;
+                                case Constants.WestDelimiter:
+                                    thisMarble = new Marble(0, true);
+                                    break;
+                                case Constants.EastDelimiter:
+                                    thisMarble = new Marble(0, false);
+                                    break;
+                            }
+                        }
+                    }
+                }
+
+                reader.Close();
+            }
+            else
+            {
+                Console.Write("ERROR: Filename " + Filename + " does not exist!");
+            }
+
+            Console.WriteLine("^ Total Marbles:" + _marbles.Count);
         }
 
         public List<Marble> Marbles
         {
             get => _marbles;
+        }
+
+        public string Filename { get; private set; }
+
+        void WriteMarbles()
+        {
+            using (StreamWriter outputFile = new StreamWriter(Filename))
+            {
+                outputFile.Write(_length / Constants.DistanceMultiplier);
+                foreach (Marble marble in _marbles)
+                {
+                    outputFile.Write(marble.MovingWest ? Constants.WestDelimiter : Constants.EastDelimiter);
+                    outputFile.Write(marble.PositionMillimeters);
+                }
+                outputFile.Write(Constants.CheckDelimiter);
+                outputFile.Write(_checkMarble + 1);
+                outputFile.Write(Constants.CheckDistanceDelimiter);
+                outputFile.Write(_marbles[_checkMarble].TravelDistanceMillimeters);
+
+                outputFile.Close();
+            }
         }
 
         void SetupMarbles(int numMarbles)
@@ -46,6 +153,9 @@ namespace Euler653
                     thisMarble.PreviousMarble.NextMarble = thisMarble;
                 }
             }
+
+            Filename = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "marbles.txt");
+            WriteMarbles();
 
             Console.WriteLine("^ Total Marbles:" + _marbles.Count);
         }
@@ -111,16 +221,16 @@ namespace Euler653
             }
         }
 
-        public int GetTotalDistanceOfMillimeters(int marbleNumberOneBased)
+        public int GetTotalDistanceOfMillimeters()
         {
-            Marble thisMarble = _marbles[marbleNumberOneBased - 1];
-            while (!thisMarble.FellOut)
+            Marble thisMarble = _marbles[_checkMarble];
+            while (!_marbles[_checkMarble].FellOut)
             {
-                CleanupFallenMarbles(marbleNumberOneBased);
+                CleanupFallenMarbles(_checkMarble + 1);
                 Step();
             }
 
-            return (int)thisMarble.TravelDistanceMillimeters;
+            return (int)_marbles[_checkMarble].TravelDistanceMillimeters;
         }
 
         private void CleanupFallenMarbles(int dontCareIndex)
@@ -130,6 +240,12 @@ namespace Euler653
                 if (_marbles[i].FellOut)
                 {
                     _marbles.RemoveAt(i);
+                    _currentFellout++;
+                    if (_currentFellout % 1000 == 0)
+                    {
+                        WriteMarbles();
+                        Console.WriteLine(DateTime.Now.ToString());
+                    }
                 }
                 else
                 {

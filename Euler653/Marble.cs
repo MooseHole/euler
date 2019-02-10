@@ -14,7 +14,7 @@ namespace Euler653
         public UInt64 Position
         {
             get => _position;
-            private set => _position = value;
+            set => _position = value;
         }
 
         public Marble PreviousMarble
@@ -53,6 +53,7 @@ namespace Euler653
         public double TravelDistanceMillimeters
         {
             get => _travelDistance / Constants.DistanceMultiplier;
+            set => _travelDistance = value * Constants.DistanceMultiplier;
         }
 
         public bool FellOut
