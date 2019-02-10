@@ -70,6 +70,7 @@ namespace Euler653
             Assert.AreEqual(114101, tube.GetTotalDistanceOfMillimeters(51));
         }
 
+        [Ignore]
         [TestMethod]
         public void OutputSolutionTest()
         {

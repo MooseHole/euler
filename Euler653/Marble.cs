@@ -31,7 +31,7 @@ namespace Euler653
 
         public UInt64 PositionMillimeters
         {
-            get => _position / 10;
+            get => _position / Constants.DistanceMultiplier;
         }
 
         public UInt64 WestEdge
@@ -50,15 +50,9 @@ namespace Euler653
             private set => _movingWest = value;
         }
 
-        public double TravelDistance
-        {
-            get => _travelDistance;
-            private set => _travelDistance = value;
-        }
-
         public double TravelDistanceMillimeters
         {
-            get => _travelDistance / 10;
+            get => _travelDistance / Constants.DistanceMultiplier;
         }
 
         public bool FellOut
@@ -87,18 +81,7 @@ namespace Euler653
             get => _previousMarble == null;
         }
 
-        public bool TouchingPrevious
-        {
-            get
-            {
-                if (IsWestmostMarble)
-                {
-                    return MovingWest && WestEdge == 0;
-                }
-
-                return SamePosition(PreviousMarble);
-            }
-        }
+        public bool TouchingPrevious => SamePosition(PreviousMarble);
 
         public bool TouchingNext
         {
@@ -128,16 +111,16 @@ namespace Euler653
             if (TouchingPrevious)
             {
                 _movingWest = !_movingWest;
-                if (!IsWestmostMarble)
-                {
-                    PreviousMarble.MovingWest = !PreviousMarble.MovingWest;
-                }
+                PreviousMarble.MovingWest = !PreviousMarble.MovingWest;
             }
-
-            if (TouchingNext)
+            else if (TouchingNext)
             {
                 _movingWest = !_movingWest;
                 NextMarble.MovingWest = !NextMarble.MovingWest;
+            }
+            else if (IsWestmostMarble && MovingWest && WestEdge == 0)
+            {
+                _movingWest = !_movingWest;
             }
         }
 

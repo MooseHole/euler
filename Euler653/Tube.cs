@@ -12,7 +12,7 @@ namespace Euler653
 
         public Tube(UInt64 lengthMillimeters, int numMarbles)
         {
-            _length = lengthMillimeters * 10;
+            _length = lengthMillimeters * Constants.DistanceMultiplier;
             SetupMarbles(numMarbles);
         }
 
@@ -31,13 +31,13 @@ namespace Euler653
             {
                 UInt64 thisPositionMillimeters =
                     previousEdgeMillimeters + rng.GetInitialGap(i) + Constants.MarbleRadiusMillimeters;
-                if (thisPositionMillimeters * 10 > _length)
+                if (thisPositionMillimeters * Constants.DistanceMultiplier > _length)
                 {
                     break;
                 }
 
                 bool thisMovingWest = rng.R(i) > 10_000_000;
-                Marble thisMarble = new Marble(thisPositionMillimeters * 10, thisMovingWest);
+                Marble thisMarble = new Marble(thisPositionMillimeters * Constants.DistanceMultiplier, thisMovingWest);
                 _marbles.Add(thisMarble);
                 previousEdgeMillimeters = thisPositionMillimeters + Constants.MarbleRadiusMillimeters;
                 if (i > 0)
@@ -52,31 +52,31 @@ namespace Euler653
 
         void Step()
         {
+            // First Marble
             UInt64 minDistance = _marbles[0].MovingWest ? _marbles[0].WestEdge : UInt64.MaxValue;
 
-            foreach(Marble thisMarble in _marbles)
+            // Last Marble
+            int lastMarbleIndex = _marbles.Count - 1;
+            for (int i = lastMarbleIndex; i >= 0; i--)
+            {
+                if (_marbles[i].IsLastMarble)
+                {
+                    UInt64 distance = _length + 1 - _marbles[i].Position;
+                    minDistance = Math.Min(minDistance, distance);
+                    lastMarbleIndex = i;
+                    break;
+                }
+            }
+
+            // For all middle marbles
+            for (int i = 0; i < lastMarbleIndex; i++)
             {
                 if (minDistance == 0)
                 {
                     break;
                 }
 
-                if (thisMarble.FellOut)
-                {
-                    continue;
-                }
-
-                UInt64 distance = UInt64.MaxValue;
-
-                if (thisMarble.IsLastMarble)
-                {
-                    distance = _length + 1 - thisMarble.Position;
-                }
-                else
-                {
-                    distance = thisMarble.DistanceToCollision(thisMarble.NextMarble);
-                }
-
+                UInt64 distance = _marbles[i].DistanceToCollision(_marbles[i].NextMarble);
                 minDistance = Math.Min(minDistance, distance);
             }
 
