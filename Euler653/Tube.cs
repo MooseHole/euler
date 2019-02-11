@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -178,7 +179,8 @@ namespace Euler653
                 }
             }
 
-            // For all middle marbles
+            // Check collisions for all middle marbles
+            UInt64 minDistanceForCollisions = UInt64.MaxValue;
             for (int i = 0; i < lastMarbleIndex; i++)
             {
                 if (minDistance == 0)
@@ -187,8 +189,11 @@ namespace Euler653
                 }
 
                 UInt64 distance = _marbles[i].DistanceToCollision(_marbles[i].NextMarble);
-                minDistance = Math.Min(minDistance, distance);
+                minDistanceForCollisions = Math.Min(minDistanceForCollisions, distance);
             }
+            minDistanceForCollisions /= 2;
+
+            minDistance = Math.Min(minDistanceForCollisions, minDistance);
 
             Parallel.ForEach(_marbles, thisMarble => ProcessMarble(thisMarble, minDistance));
             if (minDistance > 0)

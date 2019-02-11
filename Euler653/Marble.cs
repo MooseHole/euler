@@ -145,7 +145,7 @@ namespace Euler653
                 return UInt64.MaxValue;
             }
 
-            return (eastMarble.WestEdge - EastEdge) / 2;
+            return eastMarble.WestEdge - EastEdge;
         }
 
         public void Step(UInt64 distance)
