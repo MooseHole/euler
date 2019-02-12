@@ -10,6 +10,7 @@ namespace Euler653
         private bool _fellOut;
         private Marble _previousMarble;
         private Marble _nextMarble;
+        private bool _recordDistance;
 
         public UInt64 Position
         {
@@ -97,7 +98,7 @@ namespace Euler653
             }
         }
 
-        public Marble(UInt64 position, bool movingWest)
+        public Marble(UInt64 position, bool movingWest, bool recordDistance = false)
         {
             _position = position;
             _movingWest = movingWest;
@@ -105,6 +106,12 @@ namespace Euler653
             _fellOut = false;
             _previousMarble = null;
             _nextMarble = null;
+            _recordDistance = recordDistance;
+        }
+
+        public bool RecordDistance
+        {
+            set { _recordDistance = value; }
         }
 
         public void Collide()
@@ -151,7 +158,10 @@ namespace Euler653
         public void Step(UInt64 distance)
         {
             _position += distance * (UInt64)(MovingWest ? -1 : 1);
-            _travelDistance += distance;
+            if (_recordDistance)
+            {
+                _travelDistance += distance;
+            }
         }
     }
 }

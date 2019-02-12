@@ -58,6 +58,7 @@ namespace Euler653
                             else if (setCheckMarble)
                             {
                                 _marbles[_checkMarble].TravelDistanceMillimeters = p;
+                                _marbles[_checkMarble].RecordDistance = true;
                                 setCheckMarble = false;
                             }
                             else
@@ -100,7 +101,7 @@ namespace Euler653
                 Console.Write("ERROR: Filename " + Filename + " does not exist!");
             }
 
-            Console.WriteLine("^ Total Marbles:" + _marbles.Count);
+            Console.WriteLine("^ Total Marbles:" + _marbles.Count + " " + DateTime.Now);
         }
 
         public List<Marble> Marbles
@@ -145,7 +146,7 @@ namespace Euler653
                 }
 
                 bool thisMovingWest = rng.R(i) > 10_000_000;
-                Marble thisMarble = new Marble(thisPositionMillimeters * Constants.DistanceMultiplier, thisMovingWest);
+                Marble thisMarble = new Marble(thisPositionMillimeters * Constants.DistanceMultiplier, thisMovingWest, i == _checkMarble);
                 _marbles.Add(thisMarble);
                 previousEdgeMillimeters = thisPositionMillimeters + Constants.MarbleRadiusMillimeters;
                 if (i > 0)
