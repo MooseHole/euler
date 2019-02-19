@@ -22,6 +22,40 @@ namespace Euler653
             SetupMarbles(numMarbles);
         }
 
+        public void Swap(int index1, int index2)
+        {
+            Marble temp = _marbles[index1];
+            _marbles[index1] = _marbles[index2];
+            _marbles[index2] = temp;
+        }
+
+        public void SortByPosition()
+        {
+            Marble thisMarble = null;
+            // Find west most marble
+            for (int i = 0; i < _marbles.Count; ++i)
+            {
+                if (_marbles[i].PreviousMarble == null)
+                {
+                    thisMarble = _marbles[i];
+                    break;
+                }
+            }
+
+            _marbles.Clear();
+            while (thisMarble != null)
+            {
+                _marbles.Add(thisMarble);
+                thisMarble = thisMarble.NextMarble;
+            }
+        }
+
+        public void SortByDistanceTraveled()
+        {
+            // Sort by amount of distance traveled.
+            // Whenever a marble's distance traveled increases, bubble sort it into the list.
+        }
+
         public Tube(string filename)
         {
             Filename = filename;
