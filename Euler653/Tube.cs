@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
 using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -50,10 +51,14 @@ namespace Euler653
             }
         }
 
+        private static int CompareMarblesByDistanceTraveled(Marble a, Marble b)
+        {
+            return (int)(a.TravelDistance - b.TravelDistance);
+        }
+
         public void SortByDistanceTraveled()
         {
-            // Sort by amount of distance traveled.
-            // Whenever a marble's distance traveled increases, bubble sort it into the list.
+            _marbles.Sort(CompareMarblesByDistanceTraveled);
         }
 
         public Tube(string filename)
@@ -196,6 +201,90 @@ namespace Euler653
             Console.WriteLine("^ Total Marbles:" + _marbles.Count);
         }
 
+        void Stepy()
+        {
+            foreach (Marble marble in _marbles)
+            {
+                marble.Collide();
+            }
+
+            UInt64 distanceToCheck = _marbles[0].TravelDistance;
+
+            for (int i = 0; i < _marbles.Count; ++i)
+            {
+                if (_marbles[i].TravelDistance > distanceToCheck)
+                {
+                    break;
+                }
+
+                bool didNothing = true;
+
+                if (_marbles[i].MovingWest)
+                {
+                    if (_marbles[i].PreviousMarble == null)
+                    {
+                        _marbles[i].Step(_marbles[i].WestEdge);
+                        didNothing = false;
+                    }
+                    else if (_marbles[i].PreviousMarble.MovingEast)
+                    {
+                        if (_marbles[i].TravelDistance < _marbles[i].PreviousMarble.TravelDistance)
+                        {
+                            UInt64 stepDistance = _marbles[i].PreviousMarble.TravelDistance - _marbles[i].TravelDistance;
+                            _marbles[i].Step(stepDistance);
+                            didNothing = false;
+                        }
+                        else if (_marbles[i].TravelDistance == _marbles[i].PreviousMarble.TravelDistance)
+                        {
+                            UInt64 stepDistance = (_marbles[i].WestEdge - _marbles[i].PreviousMarble.EastEdge) / 2;
+                            _marbles[i].Step(stepDistance);
+                            _marbles[i].PreviousMarble.Step(stepDistance);
+                            didNothing = false;
+                        }
+                    }
+                }
+                else if (!_marbles[i].FellOut && _marbles[i].MovingEast)
+                {
+                    if (_marbles[i].NextMarble != null && !_marbles[i].NextMarble.FellOut && _marbles[i].NextMarble.MovingWest)
+                    {
+                        if (_marbles[i].TravelDistance < _marbles[i].NextMarble.TravelDistance)
+                        {
+                            UInt64 stepDistance = _marbles[i].NextMarble.TravelDistance - _marbles[i].TravelDistance;
+                            _marbles[i].Step(stepDistance);
+                            didNothing = false;
+                        }
+                        else if (_marbles[i].TravelDistance == _marbles[i].NextMarble.TravelDistance)
+                        {
+                            UInt64 stepDistance = (_marbles[i].NextMarble.WestEdge - _marbles[i].EastEdge) / 2;
+                            _marbles[i].Step(stepDistance);
+                            _marbles[i].NextMarble.Step(stepDistance);
+                            didNothing = false;
+                        }
+                    }
+                    else if (_marbles[i].NextMarble == null || _marbles[i].NextMarble.FellOut)
+                    {
+                        UInt64 stepDistance = _length + 1 - _marbles[i].Position;
+                        _marbles[i].Step(stepDistance);
+                        _marbles[i].FellOut = true;
+                        didNothing = false;
+                    }
+                }
+
+                if (didNothing)
+                {
+                    _marbles[i].Step(Constants.DistanceMultiplier);
+                }
+
+                if (_marbles[i].Position > _length)
+                {
+                    _marbles[i].FellOut = true;
+                }
+
+            }
+
+            SortByDistanceTraveled();
+        }
+
         void Step()
         {
             // First Marble
@@ -267,7 +356,7 @@ namespace Euler653
             while (!_marbles[_checkMarble].FellOut)
             {
                 CleanupFallenMarbles(_checkMarble + 1);
-                Step();
+                Stepy();
             }
 
             return (int)_marbles[_checkMarble].TravelDistanceMillimeters;
@@ -290,20 +379,20 @@ namespace Euler653
                 else
                 {
                     // They only fall out on the end
-                    break;
+//                    break;
                 }
             }
 
             for (int i = _marbles.Count - 1; i >= 0; i--)
             {
-                if (i > dontCareIndex && !_marbles[i].MovingWest)
+                if (i > dontCareIndex && _marbles[i].MovingEast)
                 {
                     _marbles[i].FellOut = true;
                 }
                 else
                 {
                     // They only fall out on the end
-                    break;
+//                    break;
                 }
             }
         }

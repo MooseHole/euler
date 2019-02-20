@@ -5,7 +5,7 @@ namespace Euler653
     class Marble
     {
         private UInt64 _position;
-        private double _travelDistance;
+        private UInt64 _travelDistance;
         private bool _movingWest;
         private bool _fellOut;
         private Marble _previousMarble;
@@ -45,16 +45,23 @@ namespace Euler653
             get => _position + Constants.MarbleRadius;
         }
 
+        public bool MovingEast => !_movingWest;
+
         public bool MovingWest
         {
             get => _movingWest;
             private set => _movingWest = value;
         }
 
+        public UInt64 TravelDistance
+        {
+            get => _travelDistance;
+        }
+
         public double TravelDistanceMillimeters
         {
-            get => _travelDistance / Constants.DistanceMultiplier;
-            set => _travelDistance = value * Constants.DistanceMultiplier;
+            get => (double)_travelDistance / Constants.DistanceMultiplier;
+            set => _travelDistance = (UInt64)(value * Constants.DistanceMultiplier);
         }
 
         public bool FellOut
@@ -83,7 +90,18 @@ namespace Euler653
             get => _previousMarble == null;
         }
 
-        public bool TouchingPrevious => SamePosition(PreviousMarble);
+        public bool TouchingPrevious
+        {
+            get
+            {
+                if (PreviousMarble == null)
+                {
+                    return false;
+                }
+
+                return PreviousMarble.SamePosition(this);
+            }
+        }
 
         public bool TouchingNext
         {
@@ -158,7 +176,7 @@ namespace Euler653
         public void Step(UInt64 distance)
         {
             _position += distance * (UInt64)(MovingWest ? -1 : 1);
-            if (_recordDistance)
+//            if (_recordDistance)
             {
                 _travelDistance += distance;
             }
